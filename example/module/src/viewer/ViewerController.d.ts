@@ -1,10 +1,12 @@
 import { Field } from "../editor";
 import "../../lib/pdfjs-dist@2.6.347/pdf.js";
 import "../../lib/jspdf/jspdf.umd.js";
+import "../../lib/utif/UTIF.js";
 declare global {
     interface Window {
         pdfjsLib: any;
         jspdf: any;
+        UTIF: any;
     }
 }
 interface ViewerOptions {
@@ -33,6 +35,8 @@ export default class ViewerController implements IViewerController {
     private currentEditor;
     private currentIdx;
     private observer;
+    private tiffCnt;
+    private tiffTotal;
     private isDraw;
     private isReadOnly;
     private isAnnotation;
@@ -53,6 +57,9 @@ export default class ViewerController implements IViewerController {
     private setAnnotation;
     private init;
     private PDFConversion;
+    private imgLoaded;
+    private getTiff;
+    private TIFFConversion;
     private imgConversion;
     private downlad;
 }

@@ -1,15 +1,16 @@
 import Editor, { Field } from "../editor";
 import "../../lib/pdfjs-dist@2.6.347/pdf.js";
 import "../../lib/jspdf/jspdf.umd.js";
+import "../../lib/utif/UTIF.js";
 
 window.pdfjsLib.GlobalWorkerOptions.workerSrc =
   "../../lib/pdfjs-dist@2.6.347/pdf.worker.js";
 
-=
 declare global {
   interface Window {
     pdfjsLib: any;
     jspdf: any;
+    UTIF: any;
   }
 }
 
@@ -49,6 +50,9 @@ export default class ViewerController implements IViewerController {
 
   private observer: IntersectionObserver | null = null;
 
+  private tiffCnt: number = 0;
+  private tiffTotal: number = 0;
+
   private isDraw: boolean = true;
   private isReadOnly: boolean = true;
   private isAnnotation: boolean = false;
@@ -74,8 +78,7 @@ export default class ViewerController implements IViewerController {
     this.viewerEl.style.height = "100%";
     this.viewerEl.style.overflow = "scroll";
 
-    this.imgs = url;
-    this.imgConversion(imgType);
+    this.imgConversion(url, imgType);
   }
   setScrollCallback(c: ScrollCallback) {
     this.scrollCallback = c;
@@ -409,10 +412,10 @@ export default class ViewerController implements IViewerController {
     this.setViewer();
   }
 
-  private async PDFConversion() {
+  private async PDFConversion(urls: string[]) {
     try {
       const pdfs: any[] = [];
-      for (const url of this.imgs) {
+      for (const url of urls) {
         const p = await window.pdfjsLib.getDocument(url);
         pdfs.push(p);
       }
@@ -471,13 +474,63 @@ export default class ViewerController implements IViewerController {
     }
   }
 
-  private async imgConversion(imgType: ImgType) {
+  private imgLoaded(e) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const ifds = window.UTIF.decode(e.target.response);
+
+    for (const ifd of ifds) {
+      window.UTIF.decodeImage(e.target.response, ifd);
+
+      canvas.width = ifd.width;
+      canvas.height = ifd.height;
+
+      const rgba = window.UTIF.toRGBA8(ifd); // Uint8Array with RGBA pixels
+
+      const image = new ImageData(
+        new Uint8ClampedArray(rgba.buffer),
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.putImageData(image, 0, 0);
+      this.imgs.push(canvas.toDataURL());
+      this.tiffCnt = this.tiffCnt + 1;
+
+      if (this.tiffCnt === this.tiffTotal) {
+        this.setViewer();
+      }
+    }
+  }
+
+  private async getTiff(url: string) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = this.imgLoaded.bind(this);
+    xhr.send();
+  }
+
+  private async TIFFConversion(url: string[]) {
+    this.tiffCnt = 0;
+    this.tiffTotal = url.length;
+    this.imgs = [];
+    for (const tiff of url) {
+      this.getTiff(tiff);
+    }
+  }
+
+  private async imgConversion(urls: string[], imgType: ImgType) {
     switch (imgType) {
       case "pdf":
-        await this.PDFConversion();
+        await this.PDFConversion(urls);
         break;
       case "tiff":
+        await this.TIFFConversion(urls);
+        break;
       default:
+        this.imgs = urls;
         this.setViewer();
         break;
     }
@@ -506,6 +559,6 @@ export default class ViewerController implements IViewerController {
       cnt++;
     }
 
-    doc.save("test.pdf");
+    doc.save(`${Date.now()}.pdf`);
   }
 }

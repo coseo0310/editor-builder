@@ -6,7 +6,7 @@ const list = document.querySelector(".list");
 init();
 
 function init() {
-  const imgs = [
+  const imgsUrl = [
     "/example/sample/temp1.jpg",
     "/example/sample/temp1.jpg",
     "/example/sample/temp1.jpg",
@@ -15,7 +15,9 @@ function init() {
 
   const pdfUrl = ["./sample/temp1.pdf"];
 
-  const viewer = new Viewer(imgs, "images", {
+  const tiffUrl = ["./sample/temp1.tiff"];
+
+  const viewer = new Viewer(imgsUrl, "images", {
     wrap: document.querySelector(".wrap"),
     fields: [getData(), getData(), getData(), getData()],
     scrollCallback: (fields) => {
