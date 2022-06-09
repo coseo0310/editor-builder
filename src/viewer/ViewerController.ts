@@ -1,5 +1,4 @@
 import Editor, { Field } from "../editor";
-
 import "../../lib/pdfjs-dist@2.6.347/pdf.js";
 
 window.pdfjsLib.GlobalWorkerOptions.workerSrc =
