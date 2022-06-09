@@ -6,16 +6,17 @@ const list = document.querySelector(".list");
 init();
 
 function init() {
-  // const imgUrl = [
-  //   "/example/sample/temp1.jpg",
-  //   "/example/sample/temp1.jpg",
-  //   "/example/sample/temp1.jpg",
-  //   "/example/sample/temp1.jpg",
-  // ];
+  const imgs = [
+    "/example/sample/temp1.jpg",
+    "/example/sample/temp1.jpg",
+    "/example/sample/temp1.jpg",
+    "/example/sample/temp1.jpg",
+  ];
 
-  const imgUrl = ["./sample/temp1.pdf"];
+  const pdfUrl = ["./sample/temp1.pdf"];
 
-  const viewer = new Viewer(imgUrl, "pdf", {
+  const viewer = new Viewer(imgs, "images", {
+    wrap: document.querySelector(".wrap"),
     fields: [getData(), getData(), getData(), getData()],
     scrollCallback: (fields) => {
       setFieldData(fields);

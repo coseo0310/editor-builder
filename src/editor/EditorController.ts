@@ -384,6 +384,43 @@ export default class EditorContorller
     link.click();
   }
 
+  getCurrenImages() {
+    if (!this.canvasEl) {
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      return;
+    }
+
+    const cWidth = this.imgEl.naturalWidth;
+    const cHeight = this.imgEl.naturalHeight;
+
+    const w = cWidth;
+    const h = cHeight;
+
+    canvas.width = w;
+    canvas.height = h;
+
+    this.drawImage(ctx, {
+      img: this.imgEl,
+      sx: 0,
+      sy: 0,
+      sWidth: Math.floor(cWidth),
+      sHeight: Math.floor(cHeight),
+      dx: 0,
+      dy: 0,
+      dWidth: Math.floor(cWidth),
+      dHeight: Math.floor(cHeight),
+    });
+
+    this.drawFields(ctx, this.fields, 0, { x: 0, y: 0 });
+
+    return canvas;
+  }
+
   addEventListener(e: Event, c: DrawCallback) {
     switch (e) {
       case "imgLoaded":

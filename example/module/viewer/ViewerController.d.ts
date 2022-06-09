@@ -1,12 +1,17 @@
 import { Field } from "../editor";
+import "../../lib/pdfjs-dist@2.6.347/pdf.js";
+import "jspdf/dist/jspdf.umd.js";
+declare global {
+    interface Window {
+        pdfjsLib: any;
+        jspdf: any;
+    }
+}
 interface ViewerOptions {
     fields: Field[][];
     zoom?: number;
     deg?: number;
-    isDraw?: boolean;
-    isReadOnly?: boolean;
-    isAnnotation?: boolean;
-    callback?: (f: Field[]) => void;
+    scrollCallback?: (f: Field[]) => void;
 }
 declare type ScrollCallback = (f: Field[]) => void;
 declare type ImgType = "image" | "pdf" | "tiff";
@@ -46,6 +51,7 @@ export default class ViewerController implements IViewerController {
     private setZoomInOut;
     private setAnnotation;
     private init;
+    private PDFConversion;
     private imgConversion;
 }
 export {};

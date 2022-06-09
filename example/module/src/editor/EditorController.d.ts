@@ -90,6 +90,7 @@ export default class EditorContorller extends EventHandler implements IEditorCon
     setScroll(type?: ScrollType): Promise<void>;
     setDraw(drawType: DrawType, field?: Field): Promise<void>;
     downloadImage(): void;
+    getCurrenImages(): HTMLCanvasElement;
     addEventListener(e: Event, c: DrawCallback): void;
 }
 export {};

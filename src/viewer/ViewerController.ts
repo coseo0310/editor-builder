@@ -1,5 +1,6 @@
 import Editor, { Field } from "../editor";
 import "../../lib/pdfjs-dist@2.6.347/pdf.js";
+import "../../lib/jspdf/jspdf.umd.js";
 
 window.pdfjsLib.GlobalWorkerOptions.workerSrc =
   "../../lib/pdfjs-dist@2.6.347/pdf.worker.js";
@@ -7,10 +8,12 @@ window.pdfjsLib.GlobalWorkerOptions.workerSrc =
 declare global {
   interface Window {
     pdfjsLib: any;
+    jspdf: any;
   }
 }
 
 interface ViewerOptions {
+  wrap: HTMLElement;
   fields: Field[][];
   zoom?: number;
   deg?: number;
@@ -22,7 +25,7 @@ type ScrollCallback = (f: Field[]) => void;
 type ImgType = "image" | "pdf" | "tiff";
 
 interface IViewerController {
-  getViewerElement: () => HTMLDivElement;
+  getViewerElement: () => HTMLElement;
   setScrollCallback: (c: ScrollCallback) => void;
 }
 
@@ -38,7 +41,7 @@ export default class ViewerController implements IViewerController {
   private maxZoom: number = 150;
   private minZoom: number = 20;
 
-  private viewerEl: HTMLDivElement = document.createElement("div");
+  private viewerEl: HTMLElement;
   private editors: Editor[] = [];
   private currentEditor: Editor | null = null;
   private currentIdx: number = 0;
@@ -56,6 +59,7 @@ export default class ViewerController implements IViewerController {
     this.fields = options.fields;
     this.deg = options.deg ? options.deg : this.deg;
     this.zoom = options.zoom ? options.zoom : this.zoom;
+    this.viewerEl = options.wrap;
     // this.isDraw = !!options.isDraw;
     // this.isReadOnly = !!options.isReadOnly;
     // this.isAnnotation = !!options.isAnnotation;
@@ -81,40 +85,45 @@ export default class ViewerController implements IViewerController {
   }
 
   private async setViewer() {
-    await this.setObserve();
-    const header = document.createElement("div");
-    const preview = document.createElement("div");
-    const remote = document.createElement("div");
-    await this.setHeader(header);
-    await this.setPreview(preview);
-    await this.setRemote(remote);
-    this.viewerEl.appendChild(remote);
-    this.viewerEl.appendChild(header);
-    this.viewerEl.appendChild(preview);
+    try {
+      await this.setObserve();
+      const header = document.createElement("div");
+      const preview = document.createElement("div");
+      const remote = document.createElement("div");
+      await this.setHeader(header);
+      await this.setPreview(preview);
+      await this.setRemote(remote);
+      this.viewerEl.appendChild(remote);
+      this.viewerEl.appendChild(header);
+      this.viewerEl.appendChild(preview);
 
-    for (const [k, v] of Object.entries(this.imgs)) {
-      const idx = Number(k);
-      const editor = new Editor();
-      const canvas = editor.getCanvas();
-      canvas.classList.add(`editor-${idx}`);
-      this.viewerEl.insertBefore(canvas, header);
-      editor.setImgUrl(v);
-      editor.setIsReadonly(this.isReadOnly);
-      editor.addEventListener("imgLoaded", () => {
-        editor.setCalculatedScale("height", idx === 0);
-        editor.setFields(this.fields[idx] || []);
-        editor.setIsIdx(this.isAnnotation);
-        editor.setIsText(this.isAnnotation);
-        editor.draw();
-      });
-      this.editors.push(editor);
-      if (this.observer) {
-        this.observer.observe(canvas);
+      for (const [k, v] of Object.entries(this.imgs)) {
+        const idx = Number(k);
+        const editor = new Editor();
+        const canvas = editor.getCanvas();
+        canvas.classList.add(`editor-${idx}`);
+        this.viewerEl.insertBefore(canvas, header);
+        editor.setImgUrl(v);
+        editor.setIsReadonly(this.isReadOnly);
+        editor.addEventListener("imgLoaded", () => {
+          editor.setCalculatedScale("height", idx === 0);
+          editor.setFields(this.fields[idx] || []);
+          editor.setIsIdx(this.isAnnotation);
+          editor.setIsText(this.isAnnotation);
+          editor.draw();
+        });
+        this.editors.push(editor);
+        if (this.observer) {
+          this.observer.observe(canvas);
+        }
+        if (idx === 0) {
+          this.currentEditor = editor;
+          this.setPreviewToggle();
+        }
       }
-      if (idx === 0) {
-        this.currentEditor = editor;
-        this.setPreviewToggle();
-      }
+    } catch (error) {
+      console.error(error);
+      alert("초기화에 실패하였습니다. 이미지를 확인해주세요.");
     }
   }
 
@@ -227,7 +236,7 @@ export default class ViewerController implements IViewerController {
     download.addEventListener(
       "click",
       (() => {
-        alert("준비중...");
+        this.downlad();
       }).bind(this)
     );
 
@@ -249,7 +258,7 @@ export default class ViewerController implements IViewerController {
     el.appendChild(widthFit);
     el.appendChild(heightFit);
     el.appendChild(annotation);
-    // el.appendChild(download);
+    el.appendChild(download);
   }
 
   private async setPreview(el: HTMLDivElement) {
@@ -471,5 +480,31 @@ export default class ViewerController implements IViewerController {
         this.setViewer();
         break;
     }
+  }
+
+  private async downlad() {
+    if (this.editors.length === 0) {
+      return;
+    }
+    const doc = new window.jspdf.jsPDF();
+    const images: string[] = [];
+
+    const width = doc.internal.pageSize.getWidth();
+    const height = doc.internal.pageSize.getHeight();
+
+    let cnt = 1;
+    for (const editor of this.editors) {
+      const canvas = editor.getCurrenImages();
+      const image = canvas.toDataURL();
+      await doc.addImage(image, "PNG", 0, 0, width, height);
+      images.push(image);
+      if (cnt === this.editors.length) {
+        break;
+      }
+      doc.addPage();
+      cnt++;
+    }
+
+    doc.save("test.pdf");
   }
 }

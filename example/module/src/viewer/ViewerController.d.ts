@@ -1,11 +1,14 @@
 import { Field } from "../editor";
 import "../../lib/pdfjs-dist@2.6.347/pdf.js";
+import "../../lib/jspdf/jspdf.umd.js";
 declare global {
     interface Window {
         pdfjsLib: any;
+        jspdf: any;
     }
 }
 interface ViewerOptions {
+    wrap: HTMLElement;
     fields: Field[][];
     zoom?: number;
     deg?: number;
@@ -14,7 +17,7 @@ interface ViewerOptions {
 declare type ScrollCallback = (f: Field[]) => void;
 declare type ImgType = "image" | "pdf" | "tiff";
 interface IViewerController {
-    getViewerElement: () => HTMLDivElement;
+    getViewerElement: () => HTMLElement;
     setScrollCallback: (c: ScrollCallback) => void;
 }
 export default class ViewerController implements IViewerController {
@@ -37,7 +40,7 @@ export default class ViewerController implements IViewerController {
     private scrollCallback;
     constructor(url: string[], imgType: ImgType, options: ViewerOptions);
     setScrollCallback(c: ScrollCallback): void;
-    getViewerElement(): HTMLDivElement;
+    getViewerElement(): HTMLElement;
     private setViewer;
     private setHeader;
     private setRemote;
@@ -51,5 +54,6 @@ export default class ViewerController implements IViewerController {
     private init;
     private PDFConversion;
     private imgConversion;
+    private downlad;
 }
 export {};
