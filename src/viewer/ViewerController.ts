@@ -5,6 +5,7 @@ import "../../lib/jspdf/jspdf.umd.js";
 window.pdfjsLib.GlobalWorkerOptions.workerSrc =
   "../../lib/pdfjs-dist@2.6.347/pdf.worker.js";
 
+=
 declare global {
   interface Window {
     pdfjsLib: any;

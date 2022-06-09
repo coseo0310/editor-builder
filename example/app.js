@@ -23,7 +23,6 @@ function init() {
     },
   });
   setFieldData(getData());
-  viewerWrap.appendChild(viewer.getViewerElement());
 }
 
 // 필드 데이터 입력
